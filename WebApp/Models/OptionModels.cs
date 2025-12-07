@@ -57,5 +57,40 @@ namespace WebApp.Models
         {
             return _agencyDBContext.Options.Where(o => o.Relation == "footer-language").OrderBy(o => o.Order).ToList();
         }
+
+
+
+        public IEnumerable<Option> GetAllOptions()
+        {
+            return _agencyDBContext.Options.ToList();
+        }
+
+        public Option? GetOptionById(int optionId)
+        {
+            return _agencyDBContext.Options.FirstOrDefault(o => o.Id == optionId);
+        }
+
+        public IEnumerable<string> GetUniqueRelations()
+        {
+            return _agencyDBContext.Options
+            .Select(o => o.Relation)
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Distinct()
+            .ToList();
+        }
+
+        public bool RemoveOption(Option remove)
+        {
+            try
+            {
+                var isDeleted = _agencyDBContext.Options.Remove(remove) == null ? false : true;
+                _agencyDBContext.SaveChanges();
+                return isDeleted;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }
