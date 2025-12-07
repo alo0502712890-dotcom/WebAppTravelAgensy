@@ -49,5 +49,9 @@ namespace WebApp.Entity
 
         [ValidateNever]
         public DateTime? DateOfUpdated { get; set; } = null;
+
+        public string? ResetToken { get; set; }
+        public DateTime? ResetTokenExpiry { get; set; }
+
     }
 }
