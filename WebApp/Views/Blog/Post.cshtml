@@ -1,0 +1,90 @@
+﻿@using WebApp.Entity
+@{
+    var onePost = (Post)Model;
+}
+
+<div class="container-fluid bg-breadcrumb">
+    <div class="container text-center py-5" style="max-width: 900px;">
+        <h3 class="text-white display-3 mb-4">
+            @onePost.Name</h3>
+            <ol class="breadcrumb justify-content-center mb-0">
+                <li class="breadcrumb-item"><a href="index.html">Головна</a></li>
+                <li class="breadcrumb-item active text-white">@onePost.Name</li>
+            </ol>
+    </div>
+</div>
+<!-- Blog Start -->
+<div class="container-fluid py-5 wow fadeInUp onePost" data-wow-delay="0.1s">
+
+    <p class="d-none postId">@onePost.Id</p>
+    <p class="d-none postSlug">@onePost.Slug</p>
+
+    <div class="container py-5">
+        <div class="row g-5">
+            <div class="col">
+                <!-- Blog Detail Start -->
+                <div class="mb-5 ">
+                    <img class="img-fluid w-100 rounded mb-5" src="@onePost.ImgSrc" alt="">
+                    <h1 class="mb-4">@onePost.Name</h1>
+                    <div class="content">
+                        @Html.Raw(onePost.Context)
+                    </div>
+                </div>
+                <!-- Blog Detail End -->
+                <!-- Comment List Start -->
+                <div class="mb-5 comments-container">
+
+                    <div class="section-title section-title-sm no-line position-relative pb-3 mb-4">
+                        <h3 class="mb-0">
+
+                        </h3>
+                    </div>
+                    <div class="comments-container-body">
+
+                    </div>
+
+                </div>
+                <!-- Comment List End -->
+
+                <!-- Comment Form Start -->
+                <div class="bg-light rounded p-5">
+                    <div class="section-title section-title-sm  no-line position-relative pb-3 mb-4">
+                        <h3 class="mb-0">Залишити коментар</h3>
+                    </div>
+
+                    <div class="alert alert-success d-none comment-success-msg" role="alert">
+                        Дякуємо! Ваш коментар успішно відправлено і буде додано після модерації.
+                    </div>
+
+                    <form id="commentForm">
+                        <div class="row g-3">
+                            <input type="hidden" class="parentCommentId" value="">
+
+                            <div class="col-12 col-sm-6">
+                                <input type="text" id="userName" class="form-control bg-white border-0" placeholder="Ваше ім'я" style="height: 55px;">
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <input type="email" id="userEmail" class="form-control bg-white border-0" placeholder="Ваш Email" style="height: 55px;">
+                            </div>
+                            <div class="col-12">
+                                <textarea id="commentText" class="form-control bg-white border-0" rows="5" placeholder="Коментар"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-primary w-100 py-3" type="submit">Залишити коментар</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <!-- Comment Form End -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/comments.js?v=999"></script>
+
+}
+
+<!-- Blog End -->
+

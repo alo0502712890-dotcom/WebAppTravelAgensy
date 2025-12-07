@@ -1,0 +1,18 @@
+﻿<div class="container-fluid footer py-5">
+    <div class="container py-5">
+        <div class="row g-5">
+            <div class="col-md-6 col-lg-6 col-xl-3">
+                @await Component.InvokeAsync("FooterContacts")
+            </div>
+            <div class="col-md-6 col-lg-6 col-xl-3">
+                @await Component.InvokeAsync("FooterCompany")
+            </div>
+            <div class="col-md-6 col-lg-6 col-xl-3">
+                @await Component.InvokeAsync("FooterSupport")
+            </div>
+            <div class="col-md-6 col-lg-6 col-xl-3">
+                @await Component.InvokeAsync("FooterLanguage")
+            </div>
+        </div>
+    </div>
+</div>

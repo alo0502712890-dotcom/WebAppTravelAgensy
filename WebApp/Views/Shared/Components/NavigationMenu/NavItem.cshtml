@@ -1,0 +1,58 @@
+﻿@using WebApp.Entity
+@model Navigate
+
+@{
+    var hasChildren = Model.Childs != null && Model.Childs.Any();
+    var isRoot = Model.ParentID == null;
+}
+
+@if (hasChildren)
+{
+    if (isRoot)
+    {
+        <!-- ПЕРШИЙ РІВЕНЬ -->
+        <div class="nav-item dropdown">
+            <a href="@Model.Href"
+               class="nav-link dropdown-toggle @(Model.Title == "Головна" ? "active" : "")">
+                @Model.Title
+            </a>
+
+            <div class="dropdown-menu m-0">
+                @foreach (var child in Model.Childs)
+                {
+                    <partial name="Components/NavigationMenu/NavItem" model="child" />
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- ДРУГИЙ+ РІВЕНЬ -->
+        <div class="dropdown-submenu dropdown">
+            <a href="@Model.Href" class="dropdown-item dropdown-toggle">
+                @Model.Title
+            </a>
+            <div class="dropdown-menu">
+                @foreach (var child in Model.Childs)
+                {
+                    <partial name="Components/NavigationMenu/NavItem" model="child" />
+                }
+            </div>
+        </div>
+    }
+}
+else
+{
+    if (isRoot)
+    {
+        <a href="@Model.Href" class="nav-item nav-link @(Model.Title == "Головна" ? "active" : "")">
+            @Model.Title
+        </a>
+    }
+    else
+    {
+        <a href="@Model.Href" class="dropdown-item">
+            @Model.Title
+        </a>
+    }
+}

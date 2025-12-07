@@ -1,0 +1,61 @@
+/* === Багаторівневе випадаюче меню Bootstrap 5 === */
+/* === Багаторівневе випадаюче меню Bootstrap 5 === */
+
+/* Базове меню */
+.navbar .dropdown-menu {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1);
+    margin-top: .25rem;
+}
+
+    /* Другий рівень — з’являється праворуч */
+    .navbar .dropdown-menu .dropdown-menu {
+        top: 0;
+        left: 100%;
+        margin-left: 0.25rem;
+        margin-top: -0.25rem;
+        border-radius: 0.5rem;
+        display: none;
+        position: absolute;
+    }
+
+        /* Третій і нижчі рівні — ще правіше */
+        .navbar .dropdown-menu .dropdown-menu .dropdown-menu {
+            left: 100%;
+            top: 0;
+        }
+
+/* Показ при наведенні */
+.navbar .dropdown:hover > .dropdown-menu {
+    display: block;
+}
+
+.navbar .dropdown-menu > .dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+}
+
+/* Контейнер підменю */
+.dropdown-submenu {
+    position: relative;
+}
+
+    /* Стрілочка праворуч */
+    .dropdown-submenu > .dropdown-toggle::after {
+        content: ">";
+        float: right;
+        margin-left: .5rem;
+        color: #999;
+    }
+
+/* Ховери */
+.dropdown-menu .dropdown-item {
+    white-space: nowrap;
+    padding: .5rem 1rem;
+    transition: background-color .2s;
+}
+
+    .dropdown-menu .dropdown-item:hover {
+        background-color: var(--bs-primary);
+        color: #fff;
+    }

@@ -1,0 +1,53 @@
+﻿@using WebApp.Entity
+@using WebApp.ViewModels
+@{
+    var viewModel = (TopBarViewModel)Model;
+}
+
+<div class="container-fluid bg-primary px-5 d-none d-lg-block">
+    <div class="row gx-0">
+        <div class="col-lg-8 text-center text-lg-start mb-2 mb-lg-0">
+            <div class="d-inline-flex align-items-center" style="height: 45px;">
+                @await Component.InvokeAsync("SocialMedia")
+            </div>
+        </div>
+
+        <div class="col-lg-4 text-center text-lg-end">
+            <div class="d-inline-flex align-items-center" style="height: 45px;">
+                @foreach (var item in viewModel.UserMenu)
+                {
+                    if (item.Name == "Dashboard")
+                    {
+                        <div class="dropdown">
+                            <a href="@item.Value" class="dropdown-toggle text-light" data-bs-toggle="dropdown">
+                                <small>
+                                    @Html.Raw(item.Key) 
+                                    @item.Name</small>
+                            </a>
+                            <div class="dropdown-menu rounded">
+                                @foreach (var sub in viewModel.DashboardItems)
+                                {
+                                    <a 
+                                        href="@sub.Value" 
+                                        class="dropdown-item">
+                                            @Html.Raw(sub.Key) 
+                                            @sub.Name
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <a href="@item.Value">
+                            <small class="me-3 text-light">
+                                @Html.Raw(item.Key) 
+                                @item.Name
+                            </small>
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

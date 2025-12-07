@@ -1,0 +1,17 @@
+﻿@using WebApp.Entity
+@model IEnumerable<Option>
+
+
+<div class="footer-item d-flex flex-column">
+    <h4 class="mb-4 text-white">Зв'язатися</h4>
+    @foreach (var item in Model)
+    {
+        <a href="#">
+            @Html.Raw(item.Key) @item.Value
+        </a>
+    }
+    <div class="d-flex align-items-center mt-3">
+        <i class="fas fa-share fa-2x text-white me-2"></i>
+         @await Component.InvokeAsync("SocialMedia") 
+    </div>
+</div>

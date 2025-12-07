@@ -1,0 +1,11 @@
+﻿@using WebApp.Entity
+@model IEnumerable<Navigate>
+
+<div class="navbar-nav ms-auto py-0">
+    @foreach (var navElement in Model)
+    {
+        @Html.Partial("Components/NavigationMenu/NavItem", navElement)
+
+    }
+</div>
+

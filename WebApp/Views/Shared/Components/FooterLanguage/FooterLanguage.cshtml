@@ -1,0 +1,54 @@
+﻿@using WebApp.Entity
+@model IEnumerable<Option>
+
+
+<div class="footer-item">
+    @{
+        var langs = Model.FirstOrDefault(o => o.Name == "Language");
+        var currs = Model.FirstOrDefault(o => o.Name == "Currency");
+        var pay = Model.FirstOrDefault(o => o.Name == "Payments");
+    }
+
+    <div class="row gy-3 gx-2 mb-4">
+        <div class="col-xl-6">
+            <div class="form-floating">
+                <select class="form-select bg-dark border" id="languageSelect">
+                    @if (langs != null)
+                    {
+                        var codes = langs.Key.Split(',');
+                        var names = langs.Value.Split(',');
+                        for (int i = 0; i < codes.Length; i++)
+                        {
+                            <option value="@codes[i]">@names[i]</option>
+                        }
+                    }
+                </select>
+                <label for="languageSelect">Мова</label>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="form-floating">
+                <select class="form-select bg-dark border" id="currencySelect">
+                    @if (currs != null)
+                    {
+                        var codes = currs.Key.Split(',');
+                        var symbols = currs.Value.Split(',');
+                        for (int i = 0; i < codes.Length; i++)
+                        {
+                            <option value="@codes[i]">@symbols[i]</option>
+                        }
+                    }
+                </select>
+                <label for="currencySelect">Валюта</label>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="text-white mb-3">Платежі</h4>
+    <div class="footer-bank-card">
+        @if (pay != null)
+        {
+            @Html.Raw(pay.Key)
+        }
+    </div>
+</div>

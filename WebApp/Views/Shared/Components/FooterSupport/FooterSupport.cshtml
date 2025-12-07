@@ -1,0 +1,10 @@
+﻿@using WebApp.Entity
+@model IEnumerable<Option>
+
+<div class="footer-item d-flex flex-column">
+    <h4 class="mb-4 text-white">Підтримка</h4>
+    @foreach (var item in Model)
+    {
+        <a href="@item.Value">@Html.Raw(item.Key) @item.Name</a>
+    }
+</div>

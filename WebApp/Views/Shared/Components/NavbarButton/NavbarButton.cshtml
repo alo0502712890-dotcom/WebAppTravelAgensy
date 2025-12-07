@@ -1,0 +1,11 @@
+﻿@using WebApp.Entity
+@model Option
+
+@if (Model != null)
+{
+    <a href="@Model.Value"
+       class="btn btn-primary rounded-pill py-2 px-4 ms-lg-4 d-none d-lg-block">
+        @Html.Raw(Model.Key)
+        @Model.Name
+    </a>
+}

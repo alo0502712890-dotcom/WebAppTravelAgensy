@@ -1,0 +1,12 @@
+﻿@using WebApp.Entity
+@model IEnumerable<Option>
+
+@foreach (var item in Model)
+{
+    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle me-2"
+       href="@item.Value"
+       target="_blank"
+       title="@item.Name">
+        @Html.Raw(item.Key)
+    </a>
+}
