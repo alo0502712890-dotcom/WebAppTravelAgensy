@@ -1,0 +1,261 @@
+﻿@using WebApp.Entity
+@using WebApp.ViewModels
+@{
+    var categoryList = (List<Category>)Model;
+}
+<!-- Container -->
+<div class="container-fixed" id="content_container">
+</div>
+<!-- End of Container -->
+<!-- Container -->
+<div class="container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-gray-900">
+                Настройки сайта
+            </h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-gray-700">
+                Управляй системой Сам
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+<!-- Container -->
+<div class="container-fixed">
+    <div class="grid gap-5 lg:gap-7.5">
+        <div class="card card-grid min-w-full">
+            <div class="card-header flex-wrap gap-2">
+                <h3 class="card-title font-medium text-sm">
+                    Showing 20 of 68 users
+                </h3>
+                <div class="flex flex-wrap gap-2 lg:gap-5">
+                    <div class="flex">
+                        <label class="input input-sm">
+                            <i class="ki-filled ki-magnifier">
+                            </i>
+                            <input data-datatable-search="#team_crew_table" placeholder="Search users" type="text" value="">
+                        </label>
+                    </div>
+                    <div class="flex flex-wrap gap-2.5">
+                        <select class="select select-sm w-28">
+                            <option value="1">
+                                Active
+                            </option>
+                            <option value="2">
+                                Disabled
+                            </option>
+                            <option value="2">
+                                Pending
+                            </option>
+                        </select>
+                        <select class="select select-sm w-28">
+                            <option value="1">
+                                Latest
+                            </option>
+                            <option value="2">
+                                Older
+                            </option>
+                            <option value="3">
+                                Oldest
+                            </option>
+                        </select>
+                        <button class="btn btn-sm btn-outline btn-primary">
+                            <i class="ki-filled ki-setting-4"></i>
+                            Filters
+                        </button>
+                        <a class="btn btn-sm btn-success" href="/admin/createOption">
+                            <i class="ki-filled ki-plus-squared">
+                            </i>
+                            New Campaign
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div data-datatable="true" data-datatable-state-save="false" id="team_crew_table">
+                    <div class="scrollable-x-auto">
+                        <table class="table table-auto table-border" data-datatable-table="true">
+                            <thead>
+
+                                <tr>
+                                    <th class="w-[60px] text-center">
+                                        Id
+                                    </th>
+                                    <th class="min-w-[180px]">
+                                        <span class="sort asc">
+                                            <span class="sort-label font-normal text-gray-700">
+                                                Name
+                                            </span>
+                                            <span class="sort-icon">
+                                            </span>
+                                        </span>
+                                    </th>
+                                    <th class="min-w-[300px]">
+                                        <span class="sort">
+                                            <span class="sort-label font-normal text-gray-700">
+                                                Slug
+                                            </span>
+                                            <span class="sort-icon">
+                                            </span>
+                                        </span>
+                                    </th>
+                                    <th class="min-w-[300px]">
+                                        <span class="sort">
+                                            <span class="sort-label font-normal text-gray-700">
+                                                Description
+                                            </span>
+                                            <span class="sort-icon">
+                                            </span>
+                                        </span>
+                                    </th>
+                                    <th class="min-w-[90px]">
+                                        <span class="sort">
+                                            <span class="sort-label font-normal text-gray-700">
+                                                ImgSrc
+                                            </span>
+                                            <span class="sort-icon">
+                                            </span>
+                                        </span>
+                                    </th>
+                                    <th class="min-w-[60px]">
+                                        <span class="sort">
+                                            <span class="sort-label font-normal text-gray-700">
+                                                Parent Id
+                                            </span>
+                                            <span class="sort-icon">
+                                            </span>
+                                        </span>
+                                    </th>
+                                    <th class="min-w-[180px]">
+                                        <span class="sort">
+                                            <span class="sort-label font-normal text-gray-700">
+                                                Activity
+                                            </span>
+                                            <span class="sort-icon">
+                                            </span>
+                                        </span>
+                                    </th>
+                                </tr>
+
+                            </thead>
+                            <tbody>
+                                @foreach (Category oneCategory in categoryList)
+                                {
+                                    <tr>
+                                        <td class="text-center">
+                                            <span readonly>@oneCategory.Id</span>
+                                        </td>
+                                        <td>
+                                            @oneCategory.Name
+                                        </td>
+                                        <td class="text-gray-800 font-normal">
+                                            @oneCategory.Slug
+                                        </td>
+                                        <td class="text-gray-800 font-normal">
+                                            @oneCategory.Description
+                                        </td>
+                                        <td class="text-gray-800 font-normal">
+                                            <img src="@oneCategory.ImgSrc" alt="@oneCategory.Name" />
+                                        </td>
+                                        <td class="text-gray-800 font-normal">
+                                            @oneCategory.ParentID
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="menu flex-inline" data-menu="true">
+                                                <div class="menu-item" data-menu-item-offset="0, 10px" data-menu-item-placement="bottom-end" data-menu-item-placement-rtl="bottom-start" data-menu-item-toggle="dropdown" data-menu-item-trigger="click|lg:click">
+                                                    <button class="menu-toggle btn btn-sm btn-icon btn-light btn-clear">
+                                                        <i class="ki-filled ki-dots-vertical">
+                                                        </i>
+                                                    </button>
+                                                    <div class="menu-dropdown menu-default w-full max-w-[175px]" data-menu-dismiss="true">
+                                                        <div class="menu-item">
+                                                            <a class="menu-link" href="/admin/editcategory?categoryId=@oneCategory.Id">
+                                                                <span class="menu-icon">
+                                                                    <i class="ki-filled ki-pencil">
+                                                                    </i>
+                                                                </span>
+                                                                <span class="menu-title">
+                                                                    Edit
+                                                                </span>
+                                                            </a>
+                                                        </div>
+                                                        <div class="menu-item">
+                                                            <a class="menu-link" href="#">
+                                                                <span class="menu-icon">
+                                                                    <i class="ki-filled ki-trash">
+                                                                    </i>
+                                                                </span>
+                                                                <button class="menu-title remove_category_button" data-remove-id="@oneCategory.Id">
+                                                                    Remove
+                                                                </button>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer justify-center md:justify-between flex-col md:flex-row gap-5 text-gray-600 text-2sm font-medium">
+                        <div class="flex items-center gap-2 order-2 md:order-1">
+                            Show
+                            <select class="select select-sm w-16" data-datatable-size="true" name="perpage">
+                            </select>
+                            per page
+                        </div>
+                        <div class="flex items-center gap-4 order-1 md:order-2">
+                            <span data-datatable-info="true">
+                            </span>
+                            <div class="pagination" data-datatable-pagination="true">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal" data-modal="true" id="remove_option_modal">
+        <div class="modal-content max-w-[600px] top-[15%]">
+            <div class="modal-header py-4 px-5 justify-end">
+                <button class="btn btn-sm btn-icon btn-light btn-clear shrink-0" data-modal-dismiss="true">
+                    <i class="ki-filled ki-cross">
+                    </i>
+                </button>
+            </div>
+            <div class="modal-body p-0 pb-5">
+                <div class="scrollable-y-auto" data-scrollable="true" data-scrollable-max-height="auto" data-scrollable-offset="300px">
+                    <div id="search_modal_integrations">
+                        <div class="menu menu-default p-0 flex-col">
+                            <div class="menu-item">
+                                <div class="menu-link flex items-center jistify-between gap-2">
+                                    <div class="flex items-center grow gap-2 justify-center">
+                                        <div class="flex flex-col gap-0.5">
+                                            <a class="text-2sm font-semibold text-gray-900 hover:text-primary-active" href="#">
+                                                Вы действительно хотите удалить опцию?
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2.5 px-4 pt-2 justify-center">
+                                <button class="btn btn-sm btn-success remove_option_form_button_cancel">
+                                    Cancel
+                                </button>
+                                <button class="btn btn-sm btn-danger remove_option_form_button_confirm">
+                                    Confirm Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/assets/js/removeCategory.js"></script>
+</div>
