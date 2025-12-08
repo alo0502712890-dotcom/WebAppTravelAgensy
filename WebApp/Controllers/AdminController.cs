@@ -78,5 +78,37 @@ namespace WebApp.Controllers
                 Message = "Option Not removed",
             }, jso);
         }
+
+
+        [HttpGet]
+        public IActionResult CreateOption()
+        {
+            var relations = _optionModel.GetRelations();
+            return View(relations);
+        }
+
+        [HttpPost]
+        public IActionResult CreateOption(Option option)
+        {
+            if (_optionModel.CreateOption(option))
+            {
+                return RedirectToAction("Config", "Admin");
+            }
+            return RedirectToAction("Index", "Error");
+        }
+
+
+        [HttpPost]
+        public IActionResult EditOption(Option option)
+        {
+            if (_optionModel.UpdateOption(option))
+            {
+                return RedirectToAction("Config", "Admin");
+            }
+            else
+            {
+                return RedirectToAction("Index", "Error");
+            }
+        }
     }
 }

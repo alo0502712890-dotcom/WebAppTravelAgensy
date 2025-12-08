@@ -1,7 +1,8 @@
 ﻿@using WebApp.Entity
 @using WebApp.ViewModels
+
 @{
-    var editedOption = (EditedOptionViewModel)Model;
+    var relationsList = (List<string>)Model;
 }
 <!-- Container -->
 <div class="container-fixed" id="content_container">
@@ -23,46 +24,30 @@
 <!-- End of Container -->
 <!-- Container -->
 <div class="container-fixed">
-    <form class="card edit-option-form" asp-controller="Admin" asp-action="EditOption" method="post">
+    <form class="card edit-option-form" asp-controller="Admin" asp-action="CreateOption" method="post">
         <div class="card-header">
             <h3 class="card-title">
-                @editedOption.Option.Name
+                Создание новой опции
             </h3>
         </div>
         <div class="card-body grid gap-5">
             <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                 <label class="form-label max-w-32">
-                    Id
-                </label>
-                <input class="input" name="Id" type="text" value="@editedOption.Option.Id" readonly />
-            </div>
-            <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
-                <label class="form-label max-w-32">
                     Name
                 </label>
-                @if (editedOption.Option.IsSystem)
-                {
-                    <span class="badge badge-success badge-outline rounded-[30px]">
-                        <span class="size-1.5 rounded-full bg-success me-1.5"></span>
-                        @editedOption.Option.Name
-                    </span>
-                }
-                else
-                {
-                    <input class="input" name="Name" type="text" value="@editedOption.Option.Name" />
-                }
+                <input class="input" name="Name" type="text" />
             </div>
             <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                 <label class="form-label max-w-32">
                     Key
                 </label>
-                <input class="input" name="Key" type="text" value="@editedOption.Option.Key" />
+                <input class="input" name="Key" type="text" />
             </div>
             <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                 <label class="form-label max-w-32">
                     Value
                 </label>
-                <input class="input" name="Value" type="text" value="@editedOption.Option.Value" />
+                <input class="input" name="Value" type="text" />
             </div>
             <div class="flex items-baseline flex-wrap gap-2.5">
                 <label class="form-label max-w-32">
@@ -73,7 +58,7 @@
                         <option value="">
 
                         </option>
-                        @foreach (var oneRelation in editedOption.Relations)
+                        @foreach (var oneRelation in relationsList)
                         {
                             <option value="@oneRelation">
                                 @oneRelation
@@ -91,26 +76,7 @@
                 <label class="form-label max-w-32">
                     Order
                 </label>
-                <input class="input" name="Order" type="number" value="@editedOption.Option.Order" min="1" max="128" />
-            </div>
-            <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
-                <label class="form-label max-w-32">
-                    Is System
-                </label>
-                @if (editedOption.Option.IsSystem)
-                {
-                    <span class="badge badge-danger badge-outline rounded-[30px]">
-                        <span class="size-1.5 rounded-full bg-danger me-1.5"></span>
-                        System
-                    </span>
-                }
-                else
-                {
-                    <span class="badge badge-success  badge-outline rounded-[30px]">
-                        <span class="size-1.5 rounded-full bg-success me-1.5"></span>
-                        Custom
-                    </span>
-                }
+                <input class="input" name="Order" type="number" min="1" max="128" value="1" />
             </div>
         </div>
         <div class="card-footer justify-center">

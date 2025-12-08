@@ -92,5 +92,47 @@ namespace WebApp.Models
                 return false;
             }
         }
+
+
+        public bool UpdateOption(Option option)
+        {
+            Option? origin = GetOptionById(option.Id);
+            if (origin != null)
+            {
+                origin.Order = option.Order;
+                origin.Name = option.Name;
+                origin.Value = option.Value;
+                origin.Relation = option.Relation == null ? String.Empty : option.Relation;
+                origin.Key = option.Key;
+
+                return _agencyDBContext.SaveChanges() == 1 ? true : false;
+            }
+            return false;
+        }
+
+        public List<string> GetRelations()
+        {
+            return _agencyDBContext.Options
+                .Select(o => o.Relation)
+                .Distinct()
+                .ToList();
+        }
+
+
+        public bool CreateOption(Option option)
+        {
+            if (option.Relation == null)
+            {
+                option.Relation = String.Empty;
+            }
+            if (_agencyDBContext.Options.Add(option) == null)
+            {
+                return false;
+            }
+            else
+            {
+                return _agencyDBContext.SaveChanges() == 1 ? true : false;
+            }
+        }
     }
 }
