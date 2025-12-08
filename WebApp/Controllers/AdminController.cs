@@ -183,5 +183,85 @@ namespace WebApp.Controllers
             return RedirectToAction("Index", "Error");          // ответ пользователю что не так 
         }
 
+
+
+        [HttpGet]
+        public string RemoveCategory(int categoryId)
+        {
+            JsonSerializerOptions jso = new JsonSerializerOptions();
+            jso.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+
+            Category? remove = _categoryModel.GetCategoryById(categoryId);
+            if (remove != null)
+            {
+                if (_categoryModel.RemoveCategory(remove))
+                {
+                    // jso.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                    return JsonSerializer.Serialize(new JsonResponse()
+                    {
+                        Code = 200,
+                        Status = StatusResponse.Success,
+                        Message = "Category removed",
+                    }, jso);
+                }
+            }
+
+            return JsonSerializer.Serialize(new JsonResponse()
+            {
+                Code = 200,
+                Status = StatusResponse.Error,
+                Message = "Category Not removed",
+            }, jso);
+        }
+
+        [HttpGet]
+        public IActionResult CreateCategory()
+        {
+            return View(_categoryModel.GetAllCategories());
+        }
+
+        [HttpPost]
+        public IActionResult CreateCategory(CategoryEditDto dtoCat)
+        {
+
+            if (dtoCat.Avatar == null || dtoCat.Avatar.Length == 0)
+            {
+                return RedirectToAction("Index", "Error");
+            }
+
+            if (!ImageValidator.IsValidImage(dtoCat.Avatar, out string error))
+            {
+                Console.WriteLine(error);
+                return RedirectToAction("Index", "Error");
+            }
+
+            string uploadFolder = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "assets",
+                "media",
+                "categories"
+            );
+
+            string extension = Path.GetExtension(dtoCat.Avatar.FileName);
+
+            string newFilePath = Path.Combine(uploadFolder, $"{dtoCat.Slug}{extension}");
+            FileService.SaveImage(dtoCat.Avatar, newFilePath);
+
+            Category newCat = new Category();
+            newCat.ImgSrc = newFilePath.Split("wwwroot")[1];
+            newCat.Slug = dtoCat.Slug;
+            newCat.ParentID = dtoCat.ParentID;
+            newCat.Description = dtoCat.Description;
+            newCat.Name = dtoCat.Name;
+
+
+            if (_categoryModel.CreateCategory(newCat))
+            {
+                return RedirectToAction("Categories", "Admin");
+            }
+
+            return RedirectToAction("Index", "Error");          // ответ пользователю что не так 
+        }
     }
 }

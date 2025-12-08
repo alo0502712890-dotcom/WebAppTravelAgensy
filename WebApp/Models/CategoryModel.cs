@@ -62,6 +62,33 @@ namespace WebApp.Models
 
             return _agencyDBContext.SaveChanges() == 1 ? true : false;
         }
+
+
+        public bool RemoveCategory(Category remove)
+        {
+            try
+            {
+                var isDeleted = _agencyDBContext.Categories.Remove(remove) == null ? false : true;
+                _agencyDBContext.SaveChanges();
+                return isDeleted;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool CreateCategory(Category category)
+        {
+            if (_agencyDBContext.Categories.Add(category) == null)
+            {
+                return false;
+            }
+            else
+            {
+                return _agencyDBContext.SaveChanges() == 1 ? true : false;
+            }
+        }
     }
 
 }

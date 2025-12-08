@@ -1,0 +1,85 @@
+﻿@using WebApp.Entity
+@using WebApp.ViewModels
+@{
+    var catList = (List<Category>)Model;
+}
+<!-- Container -->
+<div class="container-fixed" id="content_container">
+</div>
+<!-- End of Container -->
+<!-- Container -->
+<div class="container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-gray-900">
+                Настройки сайта
+            </h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-gray-700">
+                Создание Новой Категории
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+<!-- Container -->
+<div class="container-fixed">
+    <form class="card edit-option-form" asp-controller="Admin" asp-action="CreateCategory" method="post" enctype="multipart/form-data">
+        <div class="card-header">
+            <h3 class="card-title">
+                Заполните данные
+            </h3>
+        </div>
+        <div class="card-body grid gap-5">
+            <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                <label class="form-label max-w-32">
+                    Name
+                </label>
+                <input class="input" name="Name" type="text" />
+            </div>
+            <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                <label class="form-label max-w-32">
+                    Slug
+                </label>
+                <input class="input" name="Slug" type="text" />
+            </div>
+            <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                <label class="form-label max-w-32">
+                    Description
+                </label>
+                <input class="input" name="Description" type="text" />
+            </div>
+            <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                <label class="form-label max-w-32">
+                    Image
+                </label>
+                <div class="flex justify-center items-center">
+                    <input accept=".png, .jpg, .jpeg" name="Avatar" type="file" />
+                </div>
+            </div>
+            <div class="flex items-baseline flex-wrap gap-2.5">
+                <label class="form-label max-w-32">
+                    Parent
+                </label>
+                <div class="flex flex-col items-start grow gap-5">
+                    <select class="select reations-select" name="ParentId">
+                        <option value="">
+
+                        </option>
+                        @foreach (var oneRelation in catList)
+                        {
+                            <option value="@oneRelation.Id">
+                                @oneRelation.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer justify-center">
+            <button class="btn btn-sm btn-primary" type="submit">
+                Создать
+            </button>
+        </div>
+    </form>
+
+</div>
