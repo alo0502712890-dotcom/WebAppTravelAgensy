@@ -1,42 +1,72 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
+Ôªøusing Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WebApp.DB;
+using WebApp.Entity;
+using WebApp.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// MVC
 builder.Services.AddControllersWithViews();
+
+// DB
 builder.Services.AddDbContext<AgencyDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AgencyDBConnection"))
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("AgencyDBConnection"))
 );
 
-// Ì‡Î‡¯ÚÓ‚Û∫ÏÓ ‡ÛÚÂÌÚËÙ≥Í‡ˆ≥˛
-builder.Services.AddAuthentication(options =>
+// IDENTITY
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme; // ˘Ó· Google Ô‡ˆ˛‚‡‚
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+
+    options.User.RequireUniqueEmail = false;
 })
-.AddCookie(options =>
+.AddEntityFrameworkStores<AgencyDBContext>()
+.AddDefaultTokenProviders();
+
+// COOKIE
+builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/LoginIn";
     options.AccessDeniedPath = "/Error/AccessDenied";
-})
-.AddGoogle(options =>
-{
-    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
 });
+
+// CLAIMS
+builder.Services.AddScoped<
+    IUserClaimsPrincipalFactory<User>,
+    AppUserClaimsPrincipalFactory>();
+
+// SESSION
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(10);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// AUTH
+builder.Services.AddAuthentication()
+    .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    });
 
 var app = builder.Build();
 
+// DB INIT
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<AgencyDBContext>();
-    DbInitializer.Initialize(context);
+    await DbInitializer.Initialize(scope.ServiceProvider);
 }
 
-// Configure the HTTP request pipeline.
+// PIPELINE
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -47,6 +77,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// SESSION –ü–ï–†–ï–î AUTH ‚ùó
+app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();

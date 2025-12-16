@@ -1,0 +1,46 @@
+﻿@model FinishPhoneRegistrationViewModel
+
+<form method="post" class="card-body flex flex-col gap-5 p-10">
+
+    <h3 class="text-lg font-medium text-center">
+        Завершення реєстрації
+    </h3>
+
+    <!-- 🔴 Загальні помилки -->
+    <div asp-validation-summary="ModelOnly"
+         class="text-red-500 text-sm"></div>
+
+    <input type="hidden" asp-for="PhoneNumber" />
+
+    <div>
+        <label>Логін</label>
+        <input asp-for="Login" class="input" />
+        <span asp-validation-for="Login"
+              class="text-red-500 text-sm"></span>
+    </div>
+
+    <div>
+        <label>Пароль</label>
+        <input asp-for="Password"
+               type="password"
+               class="input"
+               autocomplete="new-password" />
+        <span asp-validation-for="Password"
+              class="text-red-500 text-sm"></span>
+    </div>
+
+    <div>
+        <label>Повторіть пароль</label>
+        <input asp-for="ConfirmPassword"
+               type="password"
+               class="input"
+               autocomplete="new-password" />
+        <span asp-validation-for="ConfirmPassword"
+              class="text-red-500 text-sm"></span>
+    </div>
+
+    <button class="btn btn-primary">
+        Завершити реєстрацію
+    </button>
+
+</form>

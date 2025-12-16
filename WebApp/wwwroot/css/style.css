@@ -1287,5 +1287,21 @@
     border-left: 3px solid #ced4da;
 }
 
+.access-denied-page {
+    padding-top: 90px;
+}
+/* підкоригуй 70-110px під висоту меню */
+
+.access-denied-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(220, 53, 69, .12); /* bootstrap danger */
+    font-size: 24px;
+    flex: 0 0 auto;
+}
 
 

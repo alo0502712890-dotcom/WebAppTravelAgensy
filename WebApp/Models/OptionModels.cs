@@ -134,5 +134,14 @@ namespace WebApp.Models
                 return _agencyDBContext.SaveChanges() == 1 ? true : false;
             }
         }
+
+        public List<Option> GetOptionsByRelation(string relation)
+        {
+            return _agencyDBContext.Options
+                .Where(o => o.Relation == relation && o.IsSystem)
+                .OrderBy(o => o.Id)
+                .ToList();
+        }
+
     }
 }

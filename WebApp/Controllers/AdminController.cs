@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Razor.TagHelpers;
 using WebApp.DB;
 using WebApp.Dto;
 using WebApp.Entity;
@@ -12,19 +13,22 @@ using WebApp.ViewModels;
 namespace WebApp.Controllers
 {
 
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly AgencyDBContext _agencyDBContext;
         private OptionModels _optionModel;
         private CategoryModel _categoryModel;
+        private TagModel _tagModel;
 
         public AdminController(AgencyDBContext agencyDBContext)
         {
             _agencyDBContext = agencyDBContext;
             _optionModel = new OptionModels(agencyDBContext);
             _categoryModel = new CategoryModel(agencyDBContext);
+            _tagModel = new TagModel(agencyDBContext);
         }
+
 
         public IActionResult Index()
         {
@@ -78,7 +82,7 @@ namespace WebApp.Controllers
             }, jso);
         }
 
-
+        
         [HttpGet]
         public IActionResult CreateOption()
         {
@@ -110,7 +114,7 @@ namespace WebApp.Controllers
             }
         }
 
-
+        //================ Categories =====================
 
         [HttpGet]
         public IActionResult Categories()
@@ -139,48 +143,61 @@ namespace WebApp.Controllers
         [HttpPost]
         public IActionResult EditCategory(CategoryEditDto dtoCat)
         {
-            if (dtoCat.Avatar == null || dtoCat.Avatar.Length == 0)
-            {
-                return RedirectToAction("Index", "Error");          // ответ пользователю что не так 
-            }
-
-            if (!ImageValidator.IsValidImage(dtoCat.Avatar, out string error))
-            {
-                Console.WriteLine(error);
-                return RedirectToAction("Index", "Error");
-            }
+            EditedCategoryViewModel vm = new EditedCategoryViewModel();
 
             Category? oldCategory = _categoryModel.GetCategoryById(dtoCat.Id);
             if (oldCategory == null)
             {
-                return RedirectToAction("Index", "Error");          // ответ пользователю что не так 
+                return RedirectToAction("Index", "Error");
             }
 
-            string uploadFolder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                "assets",
-                "media",
-                "categories"
-            );
+            vm.EditedCategory = oldCategory;
+            vm.Categories = _categoryModel.GetAllCategories();
 
-            if (!string.IsNullOrEmpty(oldCategory.ImgSrc))
+            // slug має бути унікальний
+            if (_categoryModel.SlugExistsForEdit(dtoCat.Slug, dtoCat.Id))
             {
-                // remove old image
-                FileService.DeleteFile(uploadFolder, oldCategory.ImgSrc);
+                ViewBag.Error = "Slug має бути унікальним";
+                return View(vm);
             }
-            string extension = Path.GetExtension(dtoCat.Avatar.FileName);
 
-            string newFilePath = Path.Combine(uploadFolder, $"{dtoCat.Slug}{extension}");
-            FileService.SaveImage(dtoCat.Avatar, newFilePath);
+            string imgSrcToSave = oldCategory.ImgSrc;
 
+            if (dtoCat.Avatar != null && dtoCat.Avatar.Length > 0)
+            {
+                if (!ImageValidator.IsValidImage(dtoCat.Avatar, out string error))
+                {
+                    ViewBag.Error = error;
+                    return View(vm);
+                }
 
-            if (_categoryModel.UpdateCategory(oldCategory, dtoCat, newFilePath.Split("wwwroot")[1]))
+                string uploadFolder = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "assets",
+                    "media",
+                    "categories"
+                );
+
+                if (!string.IsNullOrEmpty(oldCategory.ImgSrc))
+                {
+                    FileService.DeleteFile(uploadFolder, oldCategory.ImgSrc);
+                }
+
+                string extension = Path.GetExtension(dtoCat.Avatar.FileName);
+                string newFilePath = Path.Combine(uploadFolder, $"{dtoCat.Slug}{extension}");
+                FileService.SaveImage(dtoCat.Avatar, newFilePath);
+
+                imgSrcToSave = newFilePath.Split("wwwroot")[1];
+            }
+
+            if (_categoryModel.UpdateCategory(oldCategory, dtoCat, imgSrcToSave))
             {
                 return RedirectToAction("Categories", "Admin");
             }
 
-            return RedirectToAction("Index", "Error");          // ответ пользователю что не так 
+            ViewBag.Error = "Не вдалося зберегти категорію";
+            return View(vm);
         }
 
 
@@ -226,14 +243,16 @@ namespace WebApp.Controllers
 
             if (dtoCat.Avatar == null || dtoCat.Avatar.Length == 0)
             {
-                return RedirectToAction("Index", "Error");
+                ViewBag.Error = "Оберіть зображення категорії";
+                return View(_categoryModel.GetAllCategories());
             }
 
             if (!ImageValidator.IsValidImage(dtoCat.Avatar, out string error))
             {
-                Console.WriteLine(error);
-                return RedirectToAction("Index", "Error");
+                ViewBag.Error = error;
+                return View(_categoryModel.GetAllCategories());
             }
+
 
             string uploadFolder = Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -256,12 +275,97 @@ namespace WebApp.Controllers
             newCat.Name = dtoCat.Name;
 
 
+            //  slug вже існує
+            if (_categoryModel.SlugExists(dtoCat.Slug))
+            {
+                ViewBag.Error = "Категорія з таким Slug вже існує";
+                return View(_categoryModel.GetAllCategories());
+            }
+
             if (_categoryModel.CreateCategory(newCat))
             {
                 return RedirectToAction("Categories", "Admin");
             }
 
-            return RedirectToAction("Index", "Error");          // ответ пользователю что не так 
+            return RedirectToAction("Index", "Error");
+
         }
+        //============= теги====================
+
+        [HttpGet]
+        public IActionResult Tags()
+        {
+            return View(_tagModel.GetAllTag());
+        }
+
+        [HttpGet]
+        public IActionResult CreateTag()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult CreateTag(Tag tag)
+        {
+            if (_tagModel.CreateTag(tag))
+            {
+                return RedirectToAction("Tags", "Admin");
+            }
+
+            // мінімально: передаємо повідомлення
+            ViewBag.Error = "Тег з таким Slug вже існує";
+            return View(tag);
+        }
+
+
+
+        [HttpPost]
+        public IActionResult RemoveTag(int tagId)
+        {
+            var tag = _tagModel.GetTagById(tagId);
+            if (tag == null)
+            {
+                return Json(new JsonResponse()
+                {
+                    Code = 404,
+                    Status = StatusResponse.Error,
+                    Message = "Tag not found"
+                });
+            }
+
+            var result = _tagModel.RemoveTag(tag);
+
+            return Json(new JsonResponse()
+            {
+                Code = result ? 200 : 500,
+                Status = result ? StatusResponse.Success : StatusResponse.Error,
+                Message = result ? "Tag removed" : "Tag not removed"
+            });
+        }
+
+        [HttpGet]
+        public IActionResult EditTag(int tagId)
+        {
+            var tag = _tagModel.GetTagById(tagId);
+
+            if (tag == null)
+                return RedirectToAction("Index", "Error");
+
+            return View(tag);
+        }
+
+
+        [HttpPost]
+        public IActionResult EditTag(Tag tag)
+        {
+            if (_tagModel.UpdateTag(tag))
+            {
+                return RedirectToAction("Tags", "Admin");
+            }
+
+            ViewBag.Error = "Slug має бути унікальним";
+            return View(tag);
+        }
+
     }
 }

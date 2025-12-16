@@ -1,0 +1,22 @@
+﻿
+
+
+<div class="dropdown">
+    <button class="btn btn-link dropdown-toggle"
+            data-bs-toggle="dropdown">
+        @Html.Raw(Model.Menu.Key)
+        @Model.Menu.Name
+    </button>
+
+    <ul class="dropdown-menu dropdown-menu-end">
+        @foreach (var item in Model.Items)
+        {
+            <li>
+                <a class="dropdown-item" href="@item.Value">
+                    @Html.Raw(item.Key)
+                    @item.Name
+                </a>
+            </li>
+        }
+    </ul>
+</div>

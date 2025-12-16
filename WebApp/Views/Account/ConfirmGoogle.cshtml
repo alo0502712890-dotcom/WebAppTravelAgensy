@@ -1,0 +1,84 @@
+﻿@model WebApp.ViewModels.ConfirmGoogleViewModel
+
+<form class="card-body flex flex-col gap-5 p-10"
+      method="post"
+      autocomplete="off"
+      asp-action="ConfirmGoogle"
+      asp-controller="Account">
+
+    <div class="text-center mb-2.5">
+        <h3 class="text-lg font-medium text-gray-900 mb-2.5">
+            Завершення реєстрації
+        </h3>
+        <p class="text-2sm text-gray-700">
+            Google підтвердив email — задайте пароль
+        </p>
+    </div>
+
+    <!-- EMAIL -->
+    <div class="flex flex-col gap-1">
+        <label class="form-label">Email</label>
+        <input class="input bg-gray-100 cursor-not-allowed"
+               asp-for="Email"
+               readonly />
+    </div>
+
+    <!-- LOGIN -->
+    <div class="flex flex-col gap-1">
+        <label class="form-label" asp-for="Login"></label>
+        <input class="input" asp-for="Login" placeholder="Логін" />
+        <span asp-validation-for="Login" class="text-red-500 text-sm"></span>
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="flex flex-col gap-1">
+        <label class="form-label" asp-for="Password"></label>
+        <div class="input" data-toggle-password="true">
+            <input asp-for="Password" type="password" placeholder="Пароль" />
+            <button class="btn btn-icon" type="button" data-toggle-password-trigger>
+                <i class="ki-filled ki-eye"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Password" class="text-red-500 text-sm"></span>
+    </div>
+
+    <!-- CONFIRM PASSWORD -->
+    <div class="flex flex-col gap-1">
+        <label class="form-label" asp-for="ConfirmPassword"></label>
+        <div class="input" data-toggle-password="true">
+            <input asp-for="ConfirmPassword" type="password" placeholder="Повторіть пароль" />
+            <button class="btn btn-icon" type="button" data-toggle-password-trigger>
+                <i class="ki-filled ki-eye"></i>
+            </button>
+        </div>
+        <span asp-validation-for="ConfirmPassword" class="text-red-500 text-sm"></span>
+    </div>
+
+    <!-- TERMS -->
+    <label class="checkbox-group">
+        <input class="checkbox checkbox-sm" asp-for="AcceptTerms" />
+        <span class="checkbox-label">
+            Я погоджуюсь з <a class="text-2sm link" href="#">Terms & Conditions</a>
+        </span>
+    </label>
+    <span asp-validation-for="AcceptTerms" class="text-red-500 text-sm"></span>
+
+    <!-- ERRORS -->
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger p-3 rounded-md">
+            @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <p>@e.ErrorMessage</p>
+            }
+        </div>
+    }
+
+    <button type="submit" class="btn btn-primary flex justify-center grow">
+        Завершити реєстрацію
+    </button>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

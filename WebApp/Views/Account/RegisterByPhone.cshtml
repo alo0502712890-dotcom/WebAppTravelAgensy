@@ -1,0 +1,43 @@
+﻿@model RegisterByPhoneViewModel
+
+<form method="post" class="card-body flex flex-col gap-5 p-10">
+
+    <h3 class="text-lg font-medium text-center">
+        Реєстрація по телефону
+    </h3>
+
+    <div asp-validation-summary="All" class="text-red-500"></div>
+
+    <div>
+        <label>Телефон</label>
+
+        @if (Model.IsCodeSent)
+        {
+            <input class="input" value="@Model.PhoneNumber" readonly />
+            <input type="hidden" name="PhoneNumber" value="@Model.PhoneNumber" />
+        }
+        else
+        {
+            <input name="PhoneNumber" value="@Model.PhoneNumber" class="input" />
+        }
+
+        <span asp-validation-for="PhoneNumber" class="text-red-500 text-sm"></span>
+    </div>
+
+    @if (Model.IsCodeSent)
+    {
+        <div>
+            <label>Код з SMS</label>
+            <input name="Code" value="@Model.Code" class="input" />
+            <span asp-validation-for="Code" class="text-red-500 text-sm"></span>
+        </div>
+    }
+
+    <!-- 100% передаємо стан між POST -->
+    <input type="hidden" name="IsCodeSent" value="@(Model.IsCodeSent ? "true" : "false")" />
+
+    <button class="btn btn-primary">
+        @(Model.IsCodeSent ? "Підтвердити" : "Надіслати код")
+    </button>
+
+</form>

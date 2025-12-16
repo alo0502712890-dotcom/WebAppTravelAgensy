@@ -89,6 +89,18 @@ namespace WebApp.Models
                 return _agencyDBContext.SaveChanges() == 1 ? true : false;
             }
         }
+
+        public bool SlugExists(string slug)
+        {
+            return _agencyDBContext.Categories.Any(c => c.Slug == slug);
+        }
+
+        public bool SlugExistsForEdit(string slug, int categoryId)
+        {
+            return _agencyDBContext.Categories
+                .Any(c => c.Slug == slug && c.Id != categoryId);
+        }
+
     }
 
 }

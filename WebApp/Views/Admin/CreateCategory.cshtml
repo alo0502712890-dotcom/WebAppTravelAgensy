@@ -3,6 +3,8 @@
 @{
     var catList = (List<Category>)Model;
 }
+
+
 <!-- Container -->
 <div class="container-fixed" id="content_container">
 </div>
@@ -24,6 +26,15 @@
 <!-- Container -->
 <div class="container-fixed">
     <form class="card edit-option-form" asp-controller="Admin" asp-action="CreateCategory" method="post" enctype="multipart/form-data">
+        
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger mb-4">
+                @ViewBag.Error
+            </div>
+        }
+
+        
         <div class="card-header">
             <h3 class="card-title">
                 Заполните данные
@@ -41,6 +52,7 @@
                     Slug
                 </label>
                 <input class="input" name="Slug" type="text" />
+                
             </div>
             <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                 <label class="form-label max-w-32">

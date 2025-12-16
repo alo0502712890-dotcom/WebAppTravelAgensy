@@ -1,52 +1,61 @@
 ﻿@using WebApp.Entity
 @using WebApp.ViewModels
-@{
-    var viewModel = (TopBarViewModel)Model;
-}
+@model WebApp.ViewModels.TopBarViewModel
+
 
 <div class="container-fluid bg-primary px-5 d-none d-lg-block">
     <div class="row gx-0">
+        <!-- SOCIAL -->
         <div class="col-lg-8 text-center text-lg-start mb-2 mb-lg-0">
             <div class="d-inline-flex align-items-center" style="height: 45px;">
                 @await Component.InvokeAsync("SocialMedia")
             </div>
         </div>
 
+        <!-- USER MENU -->
         <div class="col-lg-4 text-center text-lg-end">
-            <div class="d-inline-flex align-items-center" style="height: 45px;">
-                @foreach (var item in viewModel.UserMenu)
+            <div class="d-inline-flex align-items-center" style="height:45px;">
+
+                @if (User.Identity?.IsAuthenticated == true)
                 {
-                    if (item.Name == "Dashboard")
-                    {
-                        <div class="dropdown">
-                            <a href="@item.Value" class="dropdown-toggle text-light" data-bs-toggle="dropdown">
-                                <small>
-                                    @Html.Raw(item.Key) 
-                                    @item.Name</small>
-                            </a>
-                            <div class="dropdown-menu rounded">
-                                @foreach (var sub in viewModel.DashboardItems)
-                                {
-                                    <a 
-                                        href="@sub.Value" 
-                                        class="dropdown-item">
-                                            @Html.Raw(sub.Key) 
-                                            @sub.Name
-                                    </a>
-                                }
-                            </div>
+
+                    <div class="dropdown">
+                        <a href="javascript:void(0)"
+                           class="dropdown-toggle text-light"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <small>
+                                <i class="fa fa-user me-1"></i>
+                                @User.FindFirst("Login")?.Value
+                            </small>
+                        </a>
+
+                        <div class="dropdown-menu dropdown-menu-end rounded">
+                            @foreach (var item in Model.DashboardItems)
+                            {
+                                <a href="@item.Value"
+                                   class="dropdown-item @(Context.Request.Path == item.Value ? "active" : "")">
+                                    @Html.Raw(item.Key)
+                                    @item.Name
+                                </a>
+                            }
                         </div>
-                    }
-                    else
+                    </div>
+                }
+                else
+                {
+
+                    @foreach (var item in Model.UserMenu.Where(x => !string.IsNullOrEmpty(x.Value)))
                     {
-                        <a href="@item.Value">
-                            <small class="me-3 text-light">
-                                @Html.Raw(item.Key) 
+                        <a href="@item.Value" class="me-3 text-light">
+                            <small>
+                                @Html.Raw(item.Key)
                                 @item.Name
                             </small>
                         </a>
                     }
                 }
+
             </div>
         </div>
     </div>

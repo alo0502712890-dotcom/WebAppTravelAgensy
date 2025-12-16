@@ -1,233 +1,607 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using WebApp.DB;
+using Microsoft.EntityFrameworkCore;
 using WebApp.Entity;
 using WebApp.Helpers;
-using WebApp.Models;
 using WebApp.ViewModels;
 
 namespace WebApp.Controllers
 {
+   
     public class AccountController : Controller
     {
-        private readonly AgencyDBContext _agencyDBContext;
-        private UserModel _userModel;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public AccountController(AgencyDBContext agencyDBContext)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager)
         {
-            _agencyDBContext = agencyDBContext;
-            _userModel = new UserModel(agencyDBContext);
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
-
-        // -------------------------------
-        // LOGIN / LOGOUT
-        // -------------------------------
+        // -------------------------
+        // LOGIN
+        // -------------------------
         [HttpGet]
-        public IActionResult Index() => RedirectToAction("LoginIn");
-
-        [HttpGet]
-        public IActionResult LoginIn()
+        public async Task<IActionResult> LoginIn()
         {
-            ModelState.Clear();
+
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
             return View();
         }
 
-        [HttpPost]
-        public IActionResult CheckUser(string email, string password)
-        {
-            var user = _userModel.GetUserByEmail(email);
-
-            if (user != null && SecurePasswordHasher.Verify(password, user.PasswordHash))
-            {
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, user.Email),
-                    new Claim("Login", user.Login)
-                };
-                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-
-                return RedirectToAction("Index", "Admin");
-            }
-
-            return View("LoginIn", new ErrorViewModel { ErrorMessage = "User or Password incorrect" });
-        }
-
-        [HttpGet]
-        public IActionResult Logout()
-        {
-            HttpContext.SignOutAsync();
-            return RedirectToAction("LoginIn");
-        }
-
-
-        // -------------------------------
-        // REGISTRATION
-        // -------------------------------
-        [HttpGet]
-        public IActionResult RegisterIn() => View(new RegisterViewModel());
 
         [HttpPost]
-        public async Task<IActionResult> RegisterUser(RegisterViewModel model)
+        public async Task<IActionResult> LoginIn(LoginViewModel model)
         {
-            // Валідація моделі
             if (!ModelState.IsValid)
+                return View(model);
+
+            User? user = null;
+
+            // визначаємо: email чи телефон
+            var isEmail = model.EmailOrPhone.Contains("@");
+
+            if (isEmail)
             {
-                var validationError = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .FirstOrDefault(e => !string.IsNullOrEmpty(e.ErrorMessage));
+                user = await _userManager.FindByEmailAsync(model.EmailOrPhone);
 
-                if (validationError != null)
-                    model.ErrorMessage = validationError.ErrorMessage;
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "Користувач не знайдений");
+                    return View(model);
+                }
 
-                return View("RegisterIn", model);
+                // підтвердження email ТІЛЬКИ для email-логіну
+                if (!await _userManager.IsEmailConfirmedAsync(user))
+                {
+                    ModelState.AddModelError("", "Підтвердіть email перед входом");
+                    return View(model);
+                }
+            }
+            else
+            {
+                // логін по телефону
+                user = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == model.EmailOrPhone);
+
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "Користувач з таким телефоном не знайдений");
+                    return View(model);
+                }
             }
 
-            // Перевірка погодження з умовами
-            if (model.Check != "1")
+            // логін через UserName
+            var result = await _signInManager.PasswordSignInAsync(
+                user.UserName,
+                model.Password,
+                model.RememberMe,
+                lockoutOnFailure: false);
+
+            if (!result.Succeeded)
             {
-                model.ErrorMessage = "Ви повинні погодитися з Умовами та Положеннями.";
-                return View("RegisterIn", model);
+                ModelState.AddModelError("", "Невірний логін або пароль");
+                return View(model);
             }
 
-            // Перевірка унікальності email
-            if (_userModel.GetUserByEmail(model.User_Email) != null)
+            // редірект по ролі
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
+                return RedirectToAction("Index", "Admin");
+
+            return RedirectToAction("Index", "Home");
+        }
+
+
+        // -------------------------
+        // REGISTER (Email)
+        // -------------------------
+        [HttpGet]
+        public IActionResult RegisterIn() => View();
+
+        [HttpPost]
+        public async Task<IActionResult> RegisterIn(RegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
             {
-                model.ErrorMessage = "Користувач з таким Email вже існує.";
-                return View("RegisterIn", model);
+                ModelState.AddModelError("", "Користувач з таким Email вже існує");
+                return View(model);
             }
 
-            // Створення нового користувача
-            var newUser = new User
+            var user = new User
             {
-                Email = model.User_Email,
-                Login = model.User_Login,
-                PasswordHash = SecurePasswordHasher.Hash(model.User_Password),
-                DateOfCreated = DateTime.Now
+                UserName = model.Email,
+                Email = model.Email,
+                Login = model.Login
             };
 
-            if (await _userModel.AddUserAsync(newUser))
-            {
-                // Авторизація нового користувача
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, newUser.Email),
-                    new Claim("Login", newUser.Login)
-                };
-                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+            var result = await _userManager.CreateAsync(user, model.Password);
 
-                return RedirectToAction("Index", "Admin");
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+
+                return View(model);
             }
 
-            model.ErrorMessage = "Помилка при збереженні даних. Спробуйте пізніше.";
-            return View("RegisterIn", model);
+            await _userManager.AddToRoleAsync(user, "User");
+
+            // 🔑 EMAIL CONFIRMATION TOKEN
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            var confirmLink = Url.Action(
+                "ConfirmEmail",
+                "Account",
+                new { userId = user.Id, token },
+                Request.Scheme
+            );
+
+            await EmailSender.SendEmailAsync(
+                user.Email,
+                "Підтвердження реєстрації",
+                $"""
+                <h3>Підтвердження email</h3>
+                <p>Для завершення реєстрації натисніть:</p>
+                <a href="{confirmLink}">Підтвердити email</a>
+                """
+            );
+
+            return RedirectToAction(nameof(EmailConfirmationSent));
+        }
+
+        [HttpGet]
+        public IActionResult EmailConfirmationSent()
+        {
+            return View();
+        }
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail(int userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return RedirectToAction(nameof(LoginIn));
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+
+            if (!result.Succeeded)
+                return View("Error");
+
+            return View("EmailConfirmed");
         }
 
 
-        // -------------------------------
-        // GOOGLE AUTHENTICATION
-        // -------------------------------
+        // -------------------------
+        // GOOGLE LOGIN
+        // -------------------------
         [HttpGet]
         public IActionResult GoogleLogin()
         {
-            var redirectUrl = Url.Action("GoogleResponse", "Account");
-            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            var redirectUrl = Url.Action(nameof(GoogleResponse));
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl);
             return Challenge(properties, "Google");
         }
 
         [HttpGet]
         public async Task<IActionResult> GoogleResponse()
         {
-            var result = await HttpContext.AuthenticateAsync("Google");
-            if (!result.Succeeded) return RedirectToAction("LoginIn");
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+                return RedirectToAction(nameof(LoginIn));
 
-            var email = result.Principal.FindFirstValue(ClaimTypes.Email);
-            var name = result.Principal.FindFirstValue(ClaimTypes.Name);
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
+                return RedirectToAction(nameof(LoginIn));
 
-            var user = _userModel.GetUserByEmail(email);
-            if (user == null)
+            var user = await _userManager.FindByEmailAsync(email);
+
+            // 🔐 Адмінів через Google НЕ пускаємо
+            if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
             {
-                user = new User
-                {
-                    Email = email,
-                    Login = name,
-                    PasswordHash = "", // не має пароля
-                    DateOfCreated = DateTime.Now
-                };
-                await _userModel.AddUserAsync(user);
+                await _signInManager.SignOutAsync();
+                await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+                TempData["AuthError"] = "Адміністратори не можуть входити через Google";
+                return RedirectToAction(nameof(LoginIn));
             }
 
-            // Авторизація через cookie
-            var claims = new List<Claim>
+            // ✅ Якщо користувач вже існує → логін
+            if (user != null)
             {
-                new Claim(ClaimTypes.Name, user.Email),
-                new Claim("Login", user.Login)
-            };
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+                await _signInManager.SignInAsync(user, false);
+                return RedirectToAction(nameof(AfterLogin));
+            }
 
-            return RedirectToAction("Index", "Admin");
+            // ❗ Користувача нема → підтвердження
+            TempData["GoogleEmail"] = email;
+            TempData["GoogleProvider"] = info.LoginProvider;
+            TempData["GoogleKey"] = info.ProviderKey;
+
+            return RedirectToAction(nameof(ConfirmGoogle));
         }
 
-        // -------------------------------
-        // FORGOT / RESET PASSWORD
-        // -------------------------------
         [HttpGet]
-        public IActionResult ForgotPassword() => View();
+        public async Task<IActionResult> ConfirmGoogle()
+        {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+
+            if (info == null)
+            {
+                // ❌ нема активного Google-логіну
+                return RedirectToAction(nameof(LoginIn));
+            }
+
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
+                return RedirectToAction(nameof(LoginIn));
+
+            return View(new ConfirmGoogleViewModel
+            {
+                Email = email
+            });
+        }
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmGoogle(ConfirmGoogleViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // захист від повторної реєстрації
+            if (await _userManager.FindByEmailAsync(model.Email) != null)
+                return RedirectToAction(nameof(LoginIn));
+
+            var user = new User
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                Login = model.Login
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+
+                return View(model);
+            }
+
+            await _userManager.AddToRoleAsync(user, "User");
+
+            // привʼязуємо Google
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info != null)
+                await _userManager.AddLoginAsync(user, info);
+
+            await _signInManager.SignInAsync(user, false);
+
+            return RedirectToAction(nameof(AfterLogin));
+        }
+
+
+        [Authorize]
+        public async Task<IActionResult> AfterLogin()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
+                return RedirectToAction("Index", "Admin");
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        // -------------------------
+        // RegisterByPhone
+        // -------------------------
+        [HttpGet]
+        public IActionResult RegisterByPhone()
+        {
+            return View(new RegisterByPhoneViewModel());
+        }
+
+        [HttpPost]
+        public IActionResult RegisterByPhone(RegisterByPhoneViewModel model)
+        {
+            Console.WriteLine($"[POST] IsCodeSent={model.IsCodeSent}, Phone={model.PhoneNumber}, Code={model.Code}");
+
+            // STEP 1
+            if (!model.IsCodeSent)
+            {
+                if (string.IsNullOrWhiteSpace(model.PhoneNumber))
+                {
+                    ModelState.AddModelError(nameof(model.PhoneNumber), "Введіть телефон");
+                    return View(model);
+                }
+
+                var code = "1234";
+                HttpContext.Session.SetString("PhoneCode", code);
+                HttpContext.Session.SetString("PhoneNumber", model.PhoneNumber);
+
+                Console.WriteLine($"📱 FAKE SMS to {model.PhoneNumber}: {code}");
+
+                model.IsCodeSent = true;
+                return View(model);
+            }
+
+            // STEP 2
+            var savedCode = HttpContext.Session.GetString("PhoneCode");
+            var phone = HttpContext.Session.GetString("PhoneNumber");
+
+            Console.WriteLine($"[SESSION] savedCode={savedCode}, phone={phone}");
+
+            if (string.IsNullOrEmpty(savedCode) || string.IsNullOrEmpty(phone))
+            {
+                ModelState.AddModelError("", "Сесія втрачена. Спробуйте ще раз (Надіслати код).");
+                model.IsCodeSent = false;
+                return View(model);
+            }
+
+            if (model.Code != savedCode)
+            {
+                ModelState.AddModelError("", "Невірний код");
+                model.IsCodeSent = true;
+                return View(model);
+            }
+
+            // OK -> redirect
+            HttpContext.Session.Remove("PhoneCode");
+            TempData["PhoneNumber"] = phone;
+
+            Console.WriteLine("[OK] Redirect -> FinishPhoneRegistration");
+            return RedirectToAction(nameof(FinishPhoneRegistration));
+        }
+
+        [HttpGet]
+        public IActionResult FinishPhoneRegistration()
+        {
+            var phone = TempData["PhoneNumber"]?.ToString();
+            if (string.IsNullOrEmpty(phone))
+                return RedirectToAction(nameof(RegisterByPhone));
+
+            TempData.Keep("PhoneNumber"); // ✅ важливо
+
+            return View(new FinishPhoneRegistrationViewModel
+            {
+                PhoneNumber = phone
+            });
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> FinishPhoneRegistration(
+    FinishPhoneRegistrationViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // 🔒 перевірка: телефон уже існує
+            var exists = await _userManager.Users
+                .AnyAsync(u => u.PhoneNumber == model.PhoneNumber);
+
+            if (exists)
+            {
+                ModelState.AddModelError("", "Користувач з таким номером телефону вже існує");
+                return View(model);
+            }
+
+            var user = new User
+            {
+                UserName = model.PhoneNumber,
+                PhoneNumber = model.PhoneNumber,
+                Email = $"{model.PhoneNumber}@phone.local",
+                Login = model.Login
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (!result.Succeeded)
+            {
+                foreach (var e in result.Errors)
+                    ModelState.AddModelError("", e.Description);
+
+                return View(model);
+            }
+
+            await _userManager.AddToRoleAsync(user, "User");
+            await _signInManager.SignInAsync(user, false);
+
+            return RedirectToAction("Index", "Home");
+        }
+
+
+
+        // -------------------------
+        // LOGOUT
+        // -------------------------
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
+        }
+
+
+        //----------------------------
+        //Profile
+        //----------------------------
+
+        [Authorize]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                await _signInManager.SignOutAsync();
+                return RedirectToAction("LoginIn");
+            }
+
+            var model = new ProfileViewModel
+            {
+                Login = user.Login,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber
+            };
+
+            return View("Dashboard/Profile", model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> EditProfile(ProfileViewModel model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("LoginIn");
+
+            // Profile data
+            user.Login = model.Login;
+            user.PhoneNumber = model.PhoneNumber;
+
+            await _userManager.UpdateAsync(user);
+
+            await _signInManager.RefreshSignInAsync(user);
+
+            // Password change (only if filled)
+            if (!string.IsNullOrEmpty(model.NewPassword))
+            {
+                var result = await _userManager.ChangePasswordAsync(
+                    user,
+                    model.CurrentPassword,
+                    model.NewPassword
+                );
+
+                if (!result.Succeeded)
+                {
+                    foreach (var error in result.Errors)
+                        ModelState.AddModelError("", error.Description);
+
+                    return View(model);
+                }
+                TempData["PasswordChanged"] = true;
+                
+            }
+            TempData["ProfileUpdated"] = true;
+            TempData["Success"] = "Дані збережено";
+            return RedirectToAction("Profile");
+        }
+
+
+        [Authorize]
+        public IActionResult Inbox()
+        {
+            return View("Dashboard/Inbox");
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
 
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(string email)
         {
-            var user = _userModel.GetUserByEmail(email);
-            if (user == null)
+            if (string.IsNullOrEmpty(email))
             {
-                ViewBag.Error = "Користувача з таким email не знайдено";
+                ViewBag.Error = "Введіть email";
                 return View();
             }
 
-            // Генерація токена
-            string token = Guid.NewGuid().ToString();
-            user.ResetToken = token;
-            user.ResetTokenExpiry = DateTime.Now.AddMinutes(15);
-            await _agencyDBContext.SaveChangesAsync();
+            var user = await _userManager.FindByEmailAsync(email);
 
-            // Лінк на відновлення
-            string resetLink = Url.Action("ResetPassword", "Account",
-                new { token = token, email = email }, Request.Scheme);
+            // ❗ Завжди однакова відповідь (security best practice)
+            if (user == null)
+            {
+                ViewBag.Message = "Якщо email існує — лист надіслано";
+                return View();
+            }
 
-            // Надсилаємо email
-            await EmailSender.SendEmailAsync(email, "Відновлення пароля",
-                $"Перейдіть за посиланням для відновлення: <a href='{resetLink}'>Reset Password</a>");
+            // ❗ Google-акаунт без пароля
+            if (!await _userManager.HasPasswordAsync(user))
+            {
+                ViewBag.Error = "Цей акаунт використовує Google. Увійдіть через Google.";
+                return View();
+            }
 
-            ViewBag.Message = "Лист для відновлення пароля надіслано!";
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            var link = Url.Action(
+                "ResetPassword",
+                "Account",
+                new { token, email },
+                Request.Scheme
+            );
+
+            await EmailSender.SendEmailAsync(
+                email,
+                "Відновлення пароля",
+                $"""
+        <h3>Відновлення пароля</h3>
+        <p>Натисніть для зміни пароля:</p>
+        <a href="{link}">Змінити пароль</a>
+        """
+            );
+
+            ViewBag.Message = "Лист для відновлення надіслано";
             return View();
         }
 
         [HttpGet]
-        public IActionResult ResetPassword(string token, string email) =>
-            View(new ResetPasswordViewModel { Token = token, Email = email });
+        public IActionResult ResetPassword(string token, string email)
+        {
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
+                return RedirectToAction(nameof(LoginIn));
+
+            return View(new ResetPasswordViewModel
+            {
+                Token = token,
+                Email = email
+            });
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
-            var user = _userModel.GetUserByEmail(model.Email);
+            if (!ModelState.IsValid)
+                return View(model);
 
-            if (user == null || user.ResetToken != model.Token || user.ResetTokenExpiry < DateTime.Now)
+            // ❗ ТІЛЬКИ ТАК
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
             {
-                ViewBag.Error = "Невірний або прострочений токен";
-                return View();
+                ModelState.AddModelError("", "Помилка відновлення пароля");
+                return View(model);
             }
 
-            user.PasswordHash = SecurePasswordHasher.Hash(model.NewPassword);
-            user.ResetToken = null;
-            user.ResetTokenExpiry = null;
-            await _agencyDBContext.SaveChangesAsync();
+            var result = await _userManager.ResetPasswordAsync(
+                user,
+                model.Token,
+                model.NewPassword
+            );
 
-            return RedirectToAction("LoginIn");
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+
+                return View(model);
+            }
+
+            return RedirectToAction(nameof(LoginIn));
         }
+
+
     }
 }

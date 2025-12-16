@@ -1,18 +1,17 @@
-﻿using System.Collections.Generic;
-using Azure;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using WebApp.Entity;
+
 
 namespace WebApp.DB
 {
-    public class AgencyDBContext : DbContext
+    public class AgencyDBContext
+            : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public AgencyDBContext(DbContextOptions<AgencyDBContext> options)
             : base(options)
         {
-            // Database.EnsureDeleted();
-            // Database.EnsureCreated();
         }
 
         public DbSet<Option> Options { get; set; }
@@ -25,7 +24,5 @@ namespace WebApp.DB
         public DbSet<Comment> Comments { get; set; }
         public DbSet<PostTags> PostTags { get; set; }
         public DbSet<PostCategories> PostCategories { get; set; }
-
-        public DbSet<User> Users { get; set; }
     }
 }

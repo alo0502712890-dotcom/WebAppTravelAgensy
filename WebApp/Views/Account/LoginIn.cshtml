@@ -1,81 +1,81 @@
-﻿@model ErrorViewModel
+﻿@model WebApp.ViewModels.LoginViewModel
 @{
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
-<form class="card-body flex flex-col gap-5 p-10" id="sign_in_form" method="post" asp-controller="Account" asp-action="CheckUser" autocomplete="off">
+
+<form class="card-body flex flex-col gap-5 p-10" id="sign_in_form" method="post" asp-controller="Account" asp-action="LoginIn" autocomplete="off">
     <div class="text-center mb-2.5">
-        <h3 class="text-lg font-medium text-gray-900 leading-none mb-2.5">
-            Вхід
-        </h3>
+        <h3 class="text-lg font-medium text-gray-900 leading-none mb-2.5">Вхід</h3>
         <div class="flex items-center justify-center font-medium">
-            <span class="text-2sm text-gray-700 me-1.5">
-                Потрібен Аккаунт?
-            </span>
-            <a class="text-2sm link" href="/Account/registerIn">
-                Зареєструйтесь
-            </a>
+            <span class="text-2sm text-gray-700 me-1.5">Потрібен Аккаунт?</span>
+            <a class="text-2sm link" href="/Account/RegisterIn">Зареєструйтесь</a>
         </div>
     </div>
+    
     <div class="grid grid-cols-2 gap-2.5">
         <a class="btn btn-light btn-sm justify-center" href="/Account/GoogleLogin">
             <img alt="" class="size-3.5 shrink-0" src="~/assets/media/brand-logos/google.svg" />
             Use Google
         </a>
-
         <a class="btn btn-light btn-sm justify-center" href="#">
             <img alt="" class="size-3.5 shrink-0 dark:hidden" src="~/assets/media/brand-logos/apple-black.svg" />
             <img alt="" class="size-3.5 shrink-0 light:hidden" src="~/assets/media/brand-logos/apple-white.svg" />
             Use Apple
         </a>
     </div>
+    
     <div class="flex items-center gap-2">
-        <span class="border-t border-gray-200 w-full">
-        </span>
-        <span class="text-2xs text-gray-500 font-medium uppercase">
-            Or
-        </span>
-        <span class="border-t border-gray-200 w-full">
-        </span>
+        <span class="border-t border-gray-200 w-full"></span>
+        <span class="text-2xs text-gray-500 font-medium uppercase">Or</span>
+        <span class="border-t border-gray-200 w-full"></span>
     </div>
+    
     <div class="flex flex-col gap-1">
         <label class="form-label font-normal text-gray-900">
-            Email
+            Email або телефон
         </label>
-        <input class="input" placeholder="email@email.com" type="text" value="" name="email" />
+
+        <input class="input" placeholder="email@email.com або +380XXXXXXXXX" type="text" asp-for="EmailOrPhone" />
+        <span asp-validation-for="EmailOrPhone" class="text-red-500 text-sm"></span>
     </div>
+    
     <div class="flex flex-col gap-1">
         <div class="flex items-center justify-between gap-1">
-            <label class="form-label font-normal text-gray-900">
-                Пароль
-            </label>
-            <a class="text-2sm link shrink-0" href="/Account/ForgotPassword">
-                Забули пароль?
-            </a>
-
+            <label class="form-label font-normal text-gray-900" asp-for="Password"></label>
+            <a class="text-2sm link shrink-0" href="/Account/ForgotPassword">Забули пароль?</a>
         </div>
         <div class="input" data-toggle-password="true">
-            <input name="password" placeholder="Enter Password" type="password" value="" />
+            <input asp-for="Password"
+               placeholder="Введіть пароль"
+               type="password"
+               autocomplete="current-password" />
+
             <button class="btn btn-icon" data-toggle-password-trigger="true" type="button">
-                <i class="ki-filled ki-eye text-gray-500 toggle-password-active:hidden">
-                </i>
-                <i class="ki-filled ki-eye-slash text-gray-500 hidden toggle-password-active:block">
-                </i>
+                <i class="ki-filled ki-eye text-gray-500 toggle-password-active:hidden"></i>
+                <i class="ki-filled ki-eye-slash text-gray-500 hidden toggle-password-active:block"></i>
             </button>
         </div>
+        <span asp-validation-for="Password" class="text-red-500 text-sm"></span>
     </div>
+    
     <label class="checkbox-group">
-        <input class="checkbox checkbox-sm" name="check" type="checkbox" value="1" />
-        <span class="checkbox-label">
-            Запам'ятати мене
-        </span>
+        <input class="checkbox checkbox-sm" asp-for="RememberMe" type="checkbox" />
+        <span class="checkbox-label">Запам'ятати мене</span>
     </label>
-    @if (Model != null && Model.ErrorMessage != null)
+    
+    @if (ViewData.ModelState[""]?.Errors.Any() == true)
     {
-        <div class="bg-red-500 text-white p-4 rounded-md shadow-md">
-            <p>@Model.ErrorMessage</p>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            @foreach (var error in ViewData.ModelState[""].Errors)
+            {
+                <p>@error.ErrorMessage</p>
+            }
         </div>
     }
-    <button class="btn btn-primary flex justify-center grow">
-        Увійти
-    </button>
+    
+    <button type="submit" class="btn btn-primary flex justify-center grow">Увійти</button>
 </form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

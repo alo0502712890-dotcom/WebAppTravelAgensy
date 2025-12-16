@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using WebApp.Entity;
 
 namespace WebApp.DB
@@ -35,7 +36,7 @@ namespace WebApp.DB
             SeedPostCategories(context);
             SeedPostTags(context);
             SeedComments(context);
-            SeedUsers(context);
+            //SeedUsers(context);
         }
         private static bool CheckIfTablesExist(AgencyDBContext context)
         {
@@ -50,6 +51,50 @@ namespace WebApp.DB
             catch
             {
                 return false;
+            }
+        }
+
+        public static async Task Initialize(IServiceProvider serviceProvider)
+        {
+            var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
+            var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+
+            string[] roles = { "Admin", "User" };
+
+            foreach (var role in roles)
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                    await roleManager.CreateAsync(new IdentityRole<int>(role));
+            }
+
+            // Адмін
+            var adminEmail = "admin@admin.com";
+            var admin = await userManager.FindByEmailAsync(adminEmail);
+
+            if (admin == null)
+            {
+                admin = new User
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    Login = "Admin",
+                    EmailConfirmed = true // важливо для тестування
+                };
+
+                var result = await userManager.CreateAsync(admin, "qwertY13");
+
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(admin, "Admin");
+                }
+                else
+                {
+                    // Логування помилок
+                    foreach (var error in result.Errors)
+                    {
+                        Console.WriteLine($"Error creating admin: {error.Description}");
+                    }
+                }
             }
         }
 
@@ -127,19 +172,19 @@ namespace WebApp.DB
                     Value = "/Account/RegisterIn",
                     Key = "<i class=\"fa fa-user-plus me-2\"></i>"
                 },
-                new Option()
+                new Option
                 {
                     IsSystem = true,
                     Relation = "user-menu",
                     Name = "Панель керування",
-                    Value = "#", // головний пункт (dropdown)
+                    Value = "", 
                     Key = "<i class=\"fa fa-home me-2\"></i>"
                 },
                 new Option()
                 {
                     IsSystem = true,
                     Relation = "dashboard-item",
-                    Name = "My Profile",
+                    Name = "Мій профіль",
                     Value = "/Account/Profile",
                     Key = "<i class=\"fas fa-user-alt me-2\"></i>"
                 },
@@ -147,31 +192,23 @@ namespace WebApp.DB
                 {
                     IsSystem = true,
                     Relation = "dashboard-item",
-                    Name = "Inbox",
+                    Name = "Сповіщення",
                     Value = "/Account/Inbox",
-                    Key = "<i class=\"fas fa-comment-alt me-2\"></i>"
-                },
-                new Option()
-                {
-                    IsSystem = true,
-                    Relation = "dashboard-item",
-                    Name = "Notifications",
-                    Value = "/Account/Notifications",
                     Key = "<i class=\"fas fa-bell me-2\"></i>"
                 },
+                //new Option()
+                //{
+                //    IsSystem = true,
+                //    Relation = "dashboard-item",
+                //    Name = "Налаштування облікового запису",
+                //    Value = "/Account/Settings",
+                //    Key = "<i class=\"fas fa-cog me-2\"></i>"
+                //},
                 new Option()
                 {
                     IsSystem = true,
                     Relation = "dashboard-item",
-                    Name = "Account Settings",
-                    Value = "/Account/Settings",
-                    Key = "<i class=\"fas fa-cog me-2\"></i>"
-                },
-                new Option()
-                {
-                    IsSystem = true,
-                    Relation = "dashboard-item",
-                    Name = "Log Out",
+                    Name = "Вийти",
                     Value = "/Account/Logout",
                     Key = "<i class=\"fas fa-power-off me-2\"></i>"
                 },
@@ -1187,21 +1224,21 @@ namespace WebApp.DB
             }
         }
 
-        private static void SeedUsers(AgencyDBContext context)
-        {
-            if (!context.Users.Any())
-            {
-                context.Users.AddRange(
-                    new User()
-                    {
-                        Email = "admin@admin.com",
-                        PasswordHash = "$MYHASH$V1$10000$BZEG8cCbKd2UzB//x2wbns80+9KuNBnUihqOaDCn2b/caR1+",
-                        Login = "Admin Erastovich"
-                    }
-                );
-                context.SaveChanges();
-            }
-        }
+        //private static void SeedUsers(AgencyDBContext context)
+        //{
+        //    if (!context.Users.Any())
+        //    {
+        //        context.Users.AddRange(
+        //            new User()
+        //            {
+        //                Email = "admin@admin.com",
+        //                PasswordHash = "$MYHASH$V1$10000$BZEG8cCbKd2UzB//x2wbns80+9KuNBnUihqOaDCn2b/caR1+",
+        //                Login = "Admin Erastovich"
+        //            }
+        //        );
+        //        context.SaveChanges();
+        //    }
+        //}
 
     }
 }

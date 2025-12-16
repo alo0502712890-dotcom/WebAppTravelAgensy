@@ -4,22 +4,31 @@ namespace WebApp.ViewModels
 {
     public class RegisterViewModel
     {
-        [Required(ErrorMessage = "Email обов'язковий.")]
-        public string User_Email { get; set; }
+        [Required(ErrorMessage = "Логін обов'язковий")]
+        [Display(Name = "Логін")]
+        [MaxLength(50)]
+        public string Login { get; set; }
 
-        [Required(ErrorMessage = "Логін обов'язковий.")]
-        public string User_Login { get; set; }
+        [EmailAddress(ErrorMessage = "Невірний формат email")]
+        [Display(Name = "Email")]
+        public string? Email { get; set; }
 
-        [Required(ErrorMessage = "Пароль обов'язковий.")]
+        [Required(ErrorMessage = "Пароль обов'язковий")]
         [DataType(DataType.Password)]
-        public string User_Password { get; set; }
+        [MinLength(6, ErrorMessage = "Пароль повинен містити мінімум 6 символів")]
+        [Display(Name = "Пароль")]
+        public string Password { get; set; }
 
-        [Required(ErrorMessage = "Повтор пароля обов'язковий.")]
+        [Required(ErrorMessage = "Підтвердження паролю обов'язкове")]
         [DataType(DataType.Password)]
-        [Compare("User_Password", ErrorMessage = "Паролі не співпадають.")]
-        public string User_Password_Confirm { get; set; }
+        [Display(Name = "Підтвердження паролю")]
+        [Compare("Password", ErrorMessage = "Паролі не співпадають")]
+        public string ConfirmPassword { get; set; }
 
-        public string Check { get; set; } 
+        
+        [Required(ErrorMessage = "Ви повинні погодитись з умовами")]
+        [Range(typeof(bool), "true", "true", ErrorMessage = "Ви повинні погодитись з умовами")]
+        public bool Check { get; set; }
 
         public string? ErrorMessage { get; set; }
     }

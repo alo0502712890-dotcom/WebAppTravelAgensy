@@ -7,14 +7,17 @@ namespace WebApp.Helpers
     {
         public static async Task SendEmailAsync(string to, string subject, string body)
         {
-            var smtp = new SmtpClient("smtp.gmail.com")
+            using var smtp = new SmtpClient("smtp.gmail.com", 587)
             {
-                Port = 587,
-                Credentials = new NetworkCredential("alo0502712890@gmail.com", "tcytiaplzpxnnzmc"),
                 EnableSsl = true,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(
+                    "alo0502712890@gmail.com",
+                    "gdexkxtyinemxgcz"
+                )
             };
 
-            var message = new MailMessage()
+            using var message = new MailMessage
             {
                 From = new MailAddress("alo0502712890@gmail.com"),
                 Subject = subject,
@@ -23,6 +26,7 @@ namespace WebApp.Helpers
             };
 
             message.To.Add(to);
+
             await smtp.SendMailAsync(message);
         }
     }
